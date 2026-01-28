@@ -1,11 +1,9 @@
 from fastapi import FastAPI, UploadFile, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pathlib import Path
 import cv2
 import numpy as np
-
-app = FastAPI()
-
 
 def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
     """
@@ -78,6 +76,15 @@ def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
 
     return encoded_image.tobytes()
 
+app = FastAPI(title="Signature Extraction Service")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 def read_root():
@@ -99,7 +106,6 @@ async def extract_signature_endpoint(file: UploadFile, color: str = "#000000"):
         return Response(content=processed_image, media_type="image/png")
     except Exception as e:
         return {"error": str(e)}
-
 
 
 def main():
