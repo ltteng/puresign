@@ -98,7 +98,7 @@
       #status {
         margin-top: 12px;
         color: #666;
-        font-size: 12px; 
+        font-size: 12px;
       }
     </style>
   </head>
@@ -107,6 +107,15 @@
 
     <div class="controls">
       <input type="file" id="uploadInput" accept="image/*" />
+      <label for="colorInput" style="margin-left: 15px; font-weight: 500">
+        文字颜色:
+      </label>
+      <input
+        type="color"
+        id="colorInput"
+        value="#000000"
+        style="vertical-align: middle; cursor: pointer"
+      />
       <button onclick="upload()">转换图片</button>
       <div id="status">请选择图片并点击“转换图片”</div>
     </div>
@@ -154,8 +163,12 @@
         const formData = new FormData()
         formData.append('file', file)
 
+        const colorHex = document.getElementById('colorInput').value
+        // 用 encodeURIComponent 处理 # 号
+        const url = `/extract?color=${encodeURIComponent(colorHex)}`
+
         try {
-          const response = await fetch('/extract', {
+          const response = await fetch(url, {
             method: 'POST',
             body: formData
           })

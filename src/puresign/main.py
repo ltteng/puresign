@@ -7,11 +7,22 @@ import numpy as np
 app = FastAPI()
 
 
-def process_signature(image_bytes: bytes) -> bytes:
+def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
     """
     读取图片字节，使用自适应阈值提取深色文字，
     并返回带有透明背景的 PNG 字节。
+    can customize text color via color_hex.
     """
+    # 解析颜色 (hex -> BGR)
+    hex_clean = color_hex.lstrip("#")
+    if len(hex_clean) != 6:
+        # 默认黑色
+        b_val, g_val, r_val = 0, 0, 0
+    else:
+        r_val = int(hex_clean[0:2], 16)
+        g_val = int(hex_clean[2:4], 16)
+        b_val = int(hex_clean[4:6], 16)
+
     # 1. 将字节转换为 numpy 数组
     nparr = np.frombuffer(image_bytes, np.uint8)
 
@@ -52,10 +63,13 @@ def process_signature(image_bytes: bytes) -> bytes:
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
     # 5. 创建 RGBA 图像
-    # 创建纯黑色背景，这样无论原字是什么颜色（如灰色），输出都会强制变为纯黑 (#000000)
+    # 创建纯色背景 (默认黑色)，使用提取的 Mask 作为 Alpha 通道
     h, w = img.shape[:2]
-    black_bgr = np.zeros((h, w, 3), dtype=np.uint8)
-    rgba = cv2.merge((black_bgr[:,:,0], black_bgr[:,:,1], black_bgr[:,:,2], mask))
+    # 创建全图颜色层
+    foreground = np.zeros((h, w, 3), dtype=np.uint8)
+    foreground[:] = (b_val, g_val, r_val) # Fill with BGR color
+    
+    rgba = cv2.merge((foreground[:,:,0], foreground[:,:,1], foreground[:,:,2], mask))
 
     # 6. 重新编码为 PNG (以保留透明度)
     success, encoded_image = cv2.imencode(".png", rgba)
@@ -77,10 +91,11 @@ def test_page():
 
 
 @app.post("/extract")
-async def extract_signature_endpoint(file: UploadFile):
+async def extract_signature_endpoint(file: UploadFile, color: str = "#000000"):
     contents = await file.read()
     try:
-        processed_image = process_signature(contents)
+        # Pass color to processing function
+        processed_image = process_signature(contents, color)
         return Response(content=processed_image, media_type="image/png")
     except Exception as e:
         return {"error": str(e)}
