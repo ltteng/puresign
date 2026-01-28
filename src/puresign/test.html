@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puresign 图片提取测试</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; background-color: #f5f5f7; }
+        h1 { text-align: center; color: #333; }
+        .controls { text-align: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .box { flex: 1; min-width: 300px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; }
+        .box h3 { margin-top: 0; color: #666; }
+        img { max-width: 100%; height: auto; border-radius: 4px; display: block; object-fit: contain; max-height: 500px; }
+        
+        /* 棋盘格背景，用于展示透明效果 */
+        .transparent-bg {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            background-image:
+                linear-gradient(45deg, #eee 25%, transparent 25%),
+                linear-gradient(-45deg, #eee 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #eee 75%),
+                linear-gradient(-45deg, transparent 75%, #eee 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 1px dashed #ddd;
+        }
+
+        button {
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        input[type=file] { padding: 10px; }
+        #status { margin-top: 10px; color: #666; font-size: 14px; min-height: 20px; }
+    </style>
+</head>
+<body>
+    <h1>✍️ Puresign 手写提取测试</h1>
+    
+    <div class="controls">
+        <input type="file" id="uploadInput" accept="image/*">
+        <button onclick="upload()">转换图片</button>
+        <div id="status">请选择图片并点击“转换图片”</div>
+    </div>
+
+    <div class="container">
+        <div class="box">
+            <h3>原始图片</h3>
+            <img id="original" />
+        </div>
+        <div class="box">
+            <h3>处理结果 (背景透明)</h3>
+            <div class="transparent-bg">
+                <img id="result" />
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => document.getElementById('original').src = e.target.result;
+                reader.readAsDataURL(file);
+                document.getElementById('result').src = ''; // 清空之前的结果
+                document.getElementById('status').innerText = '图片已就绪，请点击转换';
+            }
+        });
+
+        async function upload() {
+            const input = document.getElementById('uploadInput');
+            const file = input.files[0];
+            if (!file) {
+                alert("请先选择一张图片");
+                return;
+            }
+
+            const status = document.getElementById('status');
+            status.innerText = '正在处理中...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/extract', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('result').src = url;
+                    status.innerText = '✅ 转换成功！';
+                } else {
+                    status.innerText = '❌ 错误: ' + response.statusText;
+                }
+            } catch (e) {
+                console.error(e);
+                status.innerText = '❌ 网络错误: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
