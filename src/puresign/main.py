@@ -16,12 +16,29 @@ def process_signature(image_bytes: bytes) -> bytes:
     nparr = np.frombuffer(image_bytes, np.uint8)
 
     # 2. 解码图片
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    # 使用 ORG_UNCHANGED 以便检测 Alpha 通道
+    img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
     if img is None:
         raise ValueError("Could not decode image")
 
+    # 检查是否已经是透明背景 (4通道且存在透明像素)
+    if len(img.shape) == 3 and img.shape[2] == 4:
+        # 获取 Alpha 通道
+        alpha_channel = img[:, :, 3]
+        # 如果存在任何非完全不透明的像素，则视为已有透明背景，直接返回原图
+        if np.min(alpha_channel) < 255:
+            return image_bytes
+        
+        # 否则，虽然是 4 通道但没有透明内容，丢弃 Alpha 继续处理
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+
     # 3. 转为灰度图
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # 无论原图是 BGR 还是 BGRA，OpenCV 通常需要正确转换
+    if len(img.shape) == 3 and img.shape[2] == 3:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    else:
+        # 兜底：如果是灰度图直接用，或者其他情况
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
 
     # 4. 自适应阈值化以查找文字
     # blockSize=21, C=10 是针对手写文字的良好启发式默认值
