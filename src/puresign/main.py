@@ -40,16 +40,22 @@ def process_signature(image_bytes: bytes) -> bytes:
         # 兜底：如果是灰度图直接用，或者其他情况
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
 
-    # 4. 自适应阈值化以查找文字
-    # blockSize=21, C=10 是针对手写文字的良好启发式默认值
+    # 4.1 自适应阈值化以查找文字
+    # C=15: 较高的阈值偏移量使判定更加严格，从而获得更细的线条
     mask = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 10
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 8
     )
 
+    # 4.2 形态学闭运算：连接断裂的笔画
+    # 使用小矩形核修复细微断裂，保证线条连贯性
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
     # 5. 创建 RGBA 图像
-    # 使用原始颜色通道，但使用掩码作为 Alpha 通道
-    b, g, r = cv2.split(img)
-    rgba = cv2.merge((b, g, r, mask))
+    # 创建纯黑色背景，这样无论原字是什么颜色（如灰色），输出都会强制变为纯黑 (#000000)
+    h, w = img.shape[:2]
+    black_bgr = np.zeros((h, w, 3), dtype=np.uint8)
+    rgba = cv2.merge((black_bgr[:,:,0], black_bgr[:,:,1], black_bgr[:,:,2], mask))
 
     # 6. 重新编码为 PNG (以保留透明度)
     success, encoded_image = cv2.imencode(".png", rgba)
@@ -61,7 +67,7 @@ def process_signature(image_bytes: bytes) -> bytes:
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return "Welcome to the Signature Extraction Service"
 
 
 @app.get("/test", response_class=HTMLResponse)
