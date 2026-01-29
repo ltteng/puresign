@@ -1,6 +1,6 @@
 [project]
 name = "puresign"
-version = "0.1.0"
+version = "0.2.0"
 description = "Specialized image processing services for extracting handwritten signatures and text"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -50,6 +50,7 @@ format = "ruff format src"
 lint = "ruff check src --fix"
 type = "ty check"
 check = ["format", "lint", "type"]
+tag = "cz bump"
 
 [tool.ty.src]
 include = ["src"]
@@ -62,11 +63,11 @@ exclude = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-tag_format = "$version"
+tag_format = "v$version"
+bump_message = "chore: bump v$current_version → v$new_version"
 version_scheme = "pep440"
 version_provider = "pep621"
 update_changelog_on_bump = true
-major_version_zero = true
 
 [tool.ruff]
 line-length = 99
