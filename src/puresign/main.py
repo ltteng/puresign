@@ -1,9 +1,11 @@
-from fastapi import FastAPI, UploadFile, Response
+from pathlib import Path
+
+import cv2
+from fastapi import FastAPI, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from pathlib import Path
-import cv2
 import numpy as np
+
 
 def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
     """
@@ -37,7 +39,7 @@ def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
         # 如果存在任何非完全不透明的像素，则视为已有透明背景，直接返回原图
         if np.min(alpha_channel) < 255:
             return image_bytes
-        
+
         # 否则，虽然是 4 通道但没有透明内容，丢弃 Alpha 继续处理
         img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
@@ -65,9 +67,9 @@ def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
     h, w = img.shape[:2]
     # 创建全图颜色层
     foreground = np.zeros((h, w, 3), dtype=np.uint8)
-    foreground[:] = (b_val, g_val, r_val) # Fill with BGR color
-    
-    rgba = cv2.merge((foreground[:,:,0], foreground[:,:,1], foreground[:,:,2], mask))
+    foreground[:] = (b_val, g_val, r_val)  # Fill with BGR color
+
+    rgba = cv2.merge((foreground[:, :, 0], foreground[:, :, 1], foreground[:, :, 2], mask))
 
     # 6. 重新编码为 PNG (以保留透明度)
     success, encoded_image = cv2.imencode(".png", rgba)
@@ -75,6 +77,7 @@ def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
         raise ValueError("Could not encode image")
 
     return encoded_image.tobytes()
+
 
 app = FastAPI(title="Signature Extraction Service")
 app.add_middleware(
@@ -87,18 +90,20 @@ app.add_middleware(
 
 
 @app.get("/")
-def read_root():
+def read_root() -> str:
     return "Welcome to the Signature Extraction Service"
 
 
 @app.get("/test", response_class=HTMLResponse)
-def test_page():
+def test_page() -> str:
     html_path = Path(__file__).parent / "test.html"
     return html_path.read_text(encoding="utf-8")
 
 
 @app.post("/extract")
-async def extract_signature_endpoint(file: UploadFile, color: str = "#000000"):
+async def extract_signature_endpoint(
+    file: UploadFile, color: str = "#000000"
+) -> Response | dict[str, str]:
     contents = await file.read()
     try:
         # Pass color to processing function
@@ -108,7 +113,7 @@ async def extract_signature_endpoint(file: UploadFile, color: str = "#000000"):
         return {"error": str(e)}
 
 
-def main():
+def main() -> None:
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8008)
