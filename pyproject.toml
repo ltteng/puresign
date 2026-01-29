@@ -29,13 +29,19 @@ build-backend = "uv_build"
 type_check = ["ty"]
 lint = ["ruff"]
 dev = [
+    "commitizen>=4.12.1",
     "poethepoet>=0.40.0",
+    "pre-commit>=4.5.1",
 ]
 
 [tool.uv]
 default-groups = ["lint", "type_check", "dev"]
 
 [tool.poe.tasks]
+setup = [
+    { cmd = "pre-commit install" },
+    { cmd = "pre-commit install --hook-type commit-msg" }
+]
 dev = "fastapi dev src/puresign/main.py --port 8008"
 start = "python -m puresign.main"
 build = "uv build"
@@ -52,6 +58,14 @@ exclude = [
     ".venv",
     "__pycache__",
 ]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "pep440"
+version_provider = "pep621"
+update_changelog_on_bump = true
+major_version_zero = true
 
 [tool.ruff]
 line-length = 99

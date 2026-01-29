@@ -1,0 +1,15 @@
+repos:
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.12.1
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      - id: poe-check
+        name: poe check
+        entry: uv run poe check
+        language: system
+        types: [python]
+        pass_filenames: false

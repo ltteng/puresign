@@ -20,19 +20,13 @@ Puresign 是一个专门用于提取手写签名和文字的图像处理服务�
 ## 🚀 快速开始
 
 ### 1. 安装工具链
-本项目使用 **[uv](https://github.com/astral-sh/uv)** 进行全栈管理。你需要先安装它（就像安装 Node.js 之后要有 npm/pnpm）。
+本项目使用 **[uv](https://github.com/astral-sh/uv)** 进行全栈管理。
 
-Mac/Linux:
+### 2. 初始化项目
+在项目根目录下运行以下命令，这将安装依赖并自动配置 Git Hooks（代码检查与提交规范）：
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+uv run poe setup
 ```
-
-### 2. 安装依赖
-在项目根目录下运行：
-```bash
-uv sync
-```
-这不仅会下载所有依赖包，还会自动为你创建一个隔离的 Python 虚拟环境（类似 `node_modules`，但在 Python 中我们通常不直接提交它）。
 
 ### 3. 启动开发服务器
 ```bash
