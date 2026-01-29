@@ -13,6 +13,7 @@ classifiers = [
 ]
 dependencies = [
     "fastapi[standard]>=0.128.0",
+    "loguru>=0.7.3",
     "numpy>=2.4.1",
     "opencv-python-headless>=4.13.0.90",
     "python-multipart>=0.0.22",

@@ -9,7 +9,7 @@ repos:
     hooks:
       - id: poe-check
         name: poe check
-        entry: uv run poe check
+        entry: .venv/bin/poe check
         language: system
         types: [python]
         pass_filenames: false

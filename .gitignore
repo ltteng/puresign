@@ -71,3 +71,7 @@ uv.lock
 # VS Code
 .vscode/
 !.vscode/settings.json
+
+#log
+logs/
+*.log

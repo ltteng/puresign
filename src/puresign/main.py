@@ -1,10 +1,14 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import cv2
 from fastapi import FastAPI, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
+from loguru import logger
 import numpy as np
+
+from puresign.logger import setup_logger
 
 
 def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
@@ -79,7 +83,17 @@ def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
     return encoded_image.tobytes()
 
 
-app = FastAPI(title="Signature Extraction Service")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Configure logging
+    setup_logger()
+    logger.info("Service starting up...")
+    yield
+    # Shutdown: Clean up if necessary
+    logger.info("Service shutting down...")
+
+
+app = FastAPI(title="Signature Extraction Service", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,  # type: ignore
     allow_origins=["*"],
@@ -102,12 +116,15 @@ def test_page() -> str:
 
 @app.post("/extract")
 async def extract_signature_endpoint(file: UploadFile, color: str = "#000000") -> Response:
+    logger.info(f"Received extraction request for file: {file.filename}, color: {color}")
     contents = await file.read()
     try:
         # Pass color to processing function
         processed_image = process_signature(contents, color)
+        logger.success(f"Successfully processed image: {len(processed_image)} bytes")
         return Response(content=processed_image, media_type="image/png")
     except Exception as e:
+        logger.error(f"Error processing image: {e}")
         # Return error as JSON response manually
         return JSONResponse(status_code=400, content={"error": str(e)})
 
