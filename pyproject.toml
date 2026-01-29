@@ -28,9 +28,21 @@ build-backend = "uv_build"
 [dependency-groups]
 type_check = ["ty"]
 lint = ["ruff"]
+dev = [
+    "poethepoet>=0.40.0",
+]
 
 [tool.uv]
-default-groups = ["lint", "type_check"]
+default-groups = ["lint", "type_check", "dev"]
+
+[tool.poe.tasks]
+dev = "fastapi dev src/puresign/main.py --port 8008"
+start = "python -m puresign.main"
+build = "uv build"
+format = "ruff format src"
+lint = "ruff check src --fix"
+type = "ty check"
+check = ["format", "lint", "type"]
 
 [tool.ty.src]
 include = ["src"]
