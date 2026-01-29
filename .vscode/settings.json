@@ -9,5 +9,7 @@
       "source.organizeImports": "explicit"
     },
     "editor.defaultFormatter": "charliermarsh.ruff"
-  }
+  },
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.languageServer": "None",
 }
