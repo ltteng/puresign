@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 
 from loguru import logger
 
@@ -17,19 +16,6 @@ def setup_logger() -> None:
     # 移除默认的 handler (为了避免重复或自定义格式)
     logger.remove()
 
-    # 1. 添加控制台输出 (Console)
-    logger.add(
-        sys.stderr,
-        level="INFO",
-        format=(
-            "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-            "<level>{level: <8}</level> | "
-            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-            "<level>{message}</level>"
-        ),
-    )
-
-    # 2. 添加文件输出 (File)
     # rotation="00:00": 每天零点创建一个新文件 (自动回滚/轮转)
     # retention="3 months": 只保留最近 3 个月的日志 (自动清理)
     # compression="zip": 压缩旧日志以节省空间
