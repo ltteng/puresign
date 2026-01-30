@@ -1,3 +1,4 @@
+import base64
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -49,8 +50,12 @@ def test_page() -> str:
 
 
 @app.post("/extract")
-async def extract_signature_endpoint(file: UploadFile, color: str = "#000000") -> Response:
-    logger.info(f"Received extraction request for file: {file.filename}, color: {color}")
+async def extract_signature_endpoint(
+    file: UploadFile, color: str = "#000000", debug: bool = False
+) -> Response:
+    logger.info(
+        f"Received extraction request for file: {file.filename}, color: {color}, debug: {debug}"
+    )
     contents = await file.read()
     try:
         # 1. 解码图片
@@ -64,6 +69,18 @@ async def extract_signature_endpoint(file: UploadFile, color: str = "#000000") -
 
         # 3. 图像处理 (去背 + 变色)
         processed_image = process_cv2_image(cropped_img, color)
+
+        if debug:
+            # Encode cropped image (which is cv2 mat) to base64
+            success, cropped_buffer = cv2.imencode(".png", cropped_img)
+            if not success:
+                raise ValueError("Could not encode cropped image")
+            cropped_b64 = base64.b64encode(cropped_buffer.tobytes()).decode("utf-8")
+
+            # Encode result (which is already bytes) to base64
+            result_b64 = base64.b64encode(processed_image).decode("utf-8")
+
+            return JSONResponse(content={"cropped": cropped_b64, "result": result_b64})
 
         logger.success(f"Successfully processed image: {len(processed_image)} bytes")
         return Response(content=processed_image, media_type="image/png")

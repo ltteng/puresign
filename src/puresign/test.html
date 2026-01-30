@@ -100,6 +100,17 @@
         color: #666;
         font-size: 12px;
       }
+      .check-group {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 15px;
+        font-size: 14px;
+        color: #333;
+      }
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
@@ -116,7 +127,13 @@
         value="#000000"
         style="vertical-align: middle; cursor: pointer"
       />
-      <button onclick="upload()">转换图片</button>
+      <div class="check-group">
+        <input type="checkbox" id="debugMode" />
+        <label for="debugMode" style="margin-left: 5px"
+          >Debug Mode (显示裁剪中间态)</label
+        >
+      </div>
+      <button onclick="upload()" id="extractBtn">转换图片</button>
       <div id="status">请选择图片并点击“转换图片”</div>
     </div>
 
@@ -125,8 +142,17 @@
         <h3>原始图片</h3>
         <img id="original" />
       </div>
+
+      <!-- OCR 裁剪中间态展示区 -->
+      <div class="box" id="debugBox" style="display: none">
+        <h3>智能裁剪</h3>
+        <div class="transparent-bg">
+          <img id="cropped" />
+        </div>
+      </div>
+
       <div class="box">
-        <h3>处理结果 (背景透明)</h3>
+        <h3>处理结果</h3>
         <div class="transparent-bg">
           <img id="result" />
         </div>
@@ -134,6 +160,17 @@
     </div>
 
     <script>
+      const debugModeCheck = document.getElementById('debugMode')
+      const debugBox = document.getElementById('debugBox')
+
+      // 更新 UI：根据 Debug 开关显隐中间结果
+      if (debugModeCheck) {
+        debugModeCheck.addEventListener('change', (e) => {
+          if (debugBox)
+            debugBox.style.display = e.target.checked ? 'flex' : 'none'
+        })
+      }
+
       document
         .getElementById('uploadInput')
         .addEventListener('change', function (e) {
@@ -143,7 +180,11 @@
             reader.onload = (e) =>
               (document.getElementById('original').src = e.target.result)
             reader.readAsDataURL(file)
-            document.getElementById('result').src = '' // 清空之前的结果
+
+            //清空
+            document.getElementById('result').src = ''
+            const cropped = document.getElementById('cropped')
+            if (cropped) cropped.src = ''
             document.getElementById('status').innerText =
               '图片已就绪，请点击转换'
           }
@@ -157,15 +198,21 @@
           return
         }
 
+        const btn = document.getElementById('extractBtn')
         const status = document.getElementById('status')
         status.innerText = '正在处理中...'
+        if (btn) btn.disabled = true
 
         const formData = new FormData()
         formData.append('file', file)
 
-        const colorHex = document.getElementById('colorInput').value
-        // 用 encodeURIComponent 处理 # 号
-        const url = `/extract?color=${encodeURIComponent(colorHex)}`
+        const colorInput = document.getElementById('colorInput')
+        const colorHex = colorInput ? colorInput.value : '#000000'
+
+        const debugCheck = document.getElementById('debugMode')
+        const isDebug = debugCheck ? debugCheck.checked : false
+
+        let url = `/extract?color=${encodeURIComponent(colorHex)}&debug=${isDebug}`
 
         try {
           const response = await fetch(url, {
@@ -174,16 +221,43 @@
           })
 
           if (response.ok) {
-            const blob = await response.blob()
-            const url = URL.createObjectURL(blob)
-            document.getElementById('result').src = url
-            status.innerText = '✅ 转换成功！'
+            if (isDebug) {
+              // Debug 模式返回 JSON
+              const data = await response.json()
+
+              // 设置裁剪图
+              if (data.cropped) {
+                const croppedImg = document.getElementById('cropped')
+                if (croppedImg)
+                  croppedImg.src = 'data:image/png;base64,' + data.cropped
+              }
+
+              // 设置结果图
+              if (data.result) {
+                document.getElementById('result').src =
+                  'data:image/png;base64,' + data.result
+              }
+              status.innerText = '✅ 转换成功 (Debug Mode)！'
+            } else {
+              // 普通模式返回图片 Blob
+              const blob = await response.blob()
+              const url = URL.createObjectURL(blob)
+              document.getElementById('result').src = url
+              status.innerText = '✅ 转换成功！'
+            }
           } else {
-            status.innerText = '❌ 错误: ' + response.statusText
+            let errMsg = response.statusText
+            try {
+              const errData = await response.json()
+              if (errData.detail) errMsg = errData.detail
+            } catch (e) {}
+            status.innerText = '❌ 错误: ' + errMsg
           }
         } catch (e) {
           console.error(e)
           status.innerText = '❌ 网络错误: ' + e.message
+        } finally {
+          if (btn) btn.disabled = false
         }
       }
     </script>
