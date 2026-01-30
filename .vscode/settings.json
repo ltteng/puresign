@@ -10,6 +10,8 @@
     },
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
+  "ty.inlayHints.callArgumentNames": false,
+  "ty.inlayHints.variableTypes": false
   // "python.defaultInterpreterPath": ".venv/bin/python",
   // "python.languageServer": "None",
 }
