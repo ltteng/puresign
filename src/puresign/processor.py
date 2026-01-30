@@ -2,8 +2,10 @@ import cv2
 import numpy as np
 
 
-# 核心处理逻辑：输入 BGR 图像和目标颜色，返回处理后的 RGBA 图像
 def core_process_image(img_bgr: np.ndarray, color_bgr: tuple[int, int, int]) -> np.ndarray:
+    """
+    核心处理逻辑：输入 BGR 图像和目标颜色，返回处理后的 RGBA 图像
+    """
     # 转为灰度图
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
 
@@ -25,8 +27,10 @@ def core_process_image(img_bgr: np.ndarray, color_bgr: tuple[int, int, int]) -> 
     return rgba
 
 
-# 处理已经解码的 OpenCV 图像 (BGR/BGRA)，返回 PNG 字节
 def process_cv2_image(img: np.ndarray, color_hex: str = "#000000") -> bytes:
+    """
+    处理已经解码的 OpenCV 图像 (BGR/BGRA)，返回 PNG 字节
+    """
     # 解析颜色 (hex -> BGR)
     hex_clean = color_hex.lstrip("#")
     if len(hex_clean) != 6:
@@ -108,8 +112,10 @@ def process_cv2_image(img: np.ndarray, color_hex: str = "#000000") -> bytes:
     return encoded_image.tobytes()
 
 
-# 处理图片字节，返回 PNG 字节
 def process_signature(image_bytes: bytes, color_hex: str = "#000000") -> bytes:
+    """
+    处理图片字节，返回 PNG 字节
+    """
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
 
