@@ -16,7 +16,10 @@ dependencies = [
     "loguru>=0.7.3",
     "numpy>=2.4.1",
     "opencv-python-headless>=4.13.0.90",
+    "paddleocr>=2.10.0",
+    "paddlepaddle>=3.3.0",
     "python-multipart>=0.0.22",
+    "setuptools>=80.10.2",
 ]
 
 [project.scripts]
