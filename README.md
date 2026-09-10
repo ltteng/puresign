@@ -57,6 +57,15 @@ uv run poe dev
 | **`uv run poe type`** | 运行类型检查 (Ty) | `npm run type-check` |
 | **`uv run poe build`** | 构建项目包 | `npm run build` |
 
+## 🚀 纯内网部署
+
+项目提供两种部署方式：
+
+1. **Windows Server + Python**：在 macOS / Linux 构建机运行 `deploy/build_windows_offline.sh` 生成包含全部依赖的一体化 ZIP，服务器安装 Python 3.11 后运行 `install.bat` 和 `start.bat`。
+2. **Linux + Docker Compose**：使用仓库中的 `Dockerfile` 和 `docker-compose.yml` 构建并启动容器。
+
+完整的准备、离线依赖、启动和防火墙说明见 [DEPLOYMENT.md](DEPLOYMENT.md)。
+
 ### ✅ Git 提交规范
 本项目集成了 **[Pre-commit](https://pre-commit.com/)** 和 **[Commitizen](https://commitizen-tools.github.io/commitizen/)**：
 

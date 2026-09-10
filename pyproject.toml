@@ -51,6 +51,7 @@ lint = "ruff check src --fix"
 type = "ty check"
 check = ["format", "lint", "type"]
 tag = "cz bump"
+pkg = "./deploy/build_windows_offline.sh"
 
 [tool.ty.src]
 include = ["src"]

@@ -1,0 +1,29 @@
+services:
+  puresign:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: puresign:0.3.0
+    container_name: puresign
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - puresign_logs:/app/logs
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen("http://127.0.0.1:8008/", timeout=3)
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  puresign_logs:
