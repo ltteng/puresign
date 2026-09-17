@@ -94,6 +94,8 @@ fi
 cp "$WHEEL_PATH" "$BUNDLE_DIR/"
 cp "$SCRIPT_DIR/install.bat" "$BUNDLE_DIR/"
 cp "$SCRIPT_DIR/start.bat" "$BUNDLE_DIR/"
+# start.bat 启动服务前会用它关掉控制台的「快速编辑模式」，缺了会退回写日志文件。
+cp "$SCRIPT_DIR/disable_quick_edit.py" "$BUNDLE_DIR/"
 
 (
     cd "$BUNDLE_DIR"
@@ -115,4 +117,4 @@ rm -f "$ARCHIVE"
 
 WHEEL_COUNT="$(find "$BUNDLE_DIR/wheelhouse" -name '*.whl' | wc -l | tr -d ' ')"
 echo "Windows 离线部署包已生成：$ARCHIVE"
-echo "依赖 wheel 数量：$WHEEL_COUNT（目标 Windows x64 / Python $PY_DOT）"
+echo "依赖 wheel 数量：${WHEEL_COUNT}（目标 Windows x64 / Python ${PY_DOT}）"

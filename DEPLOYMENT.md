@@ -24,6 +24,7 @@
 puresign-<version>-windows-offline/
 ├── install.bat                      创建 .venv 并从 wheelhouse 离线安装
 ├── start.bat                        启动服务
+├── disable_quick_edit.py            启动前关闭控制台的「快速编辑模式」
 ├── puresign-<version>-py3-none-any.whl  项目包
 ├── requirements-windows.txt         按 Windows 目标求值的依赖清单
 ├── wheelhouse/                      48 个 Windows wheel
@@ -64,6 +65,10 @@ install.bat
 ```bat
 start.bat
 ```
+
+`start.bat` 会先关掉该控制台的「快速编辑模式」再启动服务，然后把 uvicorn 日志直接打在窗口里。这个模式是 Windows 控制台的默认行为：鼠标在窗口里点一下就会进入「选择」状态（标题栏出现「选择:」前缀），屏幕停止刷新、写控制台的进程被阻塞。双击启动时那一下点击常常正好落进刚创建的窗口，于是窗口始终空白，服务却其实在跑。没有可用控制台时（例如任务计划程序无窗口运行），脚本会自动改为把输出追加到 `logs\server.out.log`。
+
+窗口空白但接口可用时，按一下 `Esc` 解除冻结即可看到缓冲区里的内容。
 
 生产环境建议用 Windows 任务计划程序托管：触发器设为「系统启动时」，操作程序设为 `start.bat`，「起始于」设为部署目录，并开启失败后自动重启。
 
